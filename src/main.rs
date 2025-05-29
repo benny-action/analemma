@@ -4,11 +4,28 @@ use std::collections::HashMap;
 
 /*
 * NOTE: designspec - graphical look at how an analemma is plotted
-*   looking at sun position and plot points from change across time.
+*       looking at sun position and plot points from change across time.
 *
-* TODO: 1. structs: body, sun, earth.
-*       2. interaction rules.
-*       3. look at representation in 2d of 3d space.
+* NOTE: Calculations:
+*       - Earth orbital mechanics, elliptical orbit, changing speed
+*       - Axial Tilt 23.44
+*       - Equation of time solar time diff
+*       - Sun relative position
+*       Maths:
+*       - Coordinate system for conversions. celestial to screen
+*       - 3D to 2D projection
+*       Rendering strategy:
+*       - Track year of sun positions
+*       - Store in hashmap
+*       - Piston drawing primitives to render path and sol pos
+*
+*
+* TODO: 1. PISTON window
+*       1a. - Coordinate system
+*       2. Equation of time implementation [Horizontal component]
+*       3. Solar Declination calculations [Vertical component]
+*       4. Combine both effects to create figure eight
+*       5. Step through states in order to animate.
 *
 *
 *
