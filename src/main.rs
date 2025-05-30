@@ -1,6 +1,6 @@
 use nalgebra::{self as na, ComplexField};
 use piston_window::*;
-use std::collections::HashMap;
+use std::{collections::HashMap, f64::consts::PI};
 
 /*
 * NOTE: designspec - graphical look at how an analemma is plotted
@@ -33,6 +33,11 @@ use std::collections::HashMap;
 const WIDTH: f64 = 540.0;
 const HEIGHT: f64 = 960.0;
 const GRAVITY: f64 = 0.9;
+
+fn equation_of_time_basic(d: f64) -> f64 {
+    let d = (d / 365.25) * 360.0 * PI / 180.0;
+    return -7.655 * d.sin() + (2.0 * d + 3.588).sin();
+}
 
 struct Body {
     position: na::Vector2<f64>,
