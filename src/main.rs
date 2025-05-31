@@ -1,6 +1,6 @@
-use nalgebra::{self as na, ComplexField};
+use nalgebra::{self as na, ComplexField, Vector2};
 use piston_window::*;
-use std::{collections::HashMap, f64::consts::PI};
+use std::f64::consts::PI;
 
 /*
 * NOTE: designspec - graphical look at how an analemma is plotted
@@ -32,38 +32,70 @@ use std::{collections::HashMap, f64::consts::PI};
 */
 const WIDTH: f64 = 540.0;
 const HEIGHT: f64 = 960.0;
-const GRAVITY: f64 = 0.9;
 
-fn equation_of_time_basic(d: f64) -> f64 {
-    let d = (d / 365.25) * 360.0 * PI / 180.0;
-    return -7.655 * d.sin() + (2.0 * d + 3.588).sin();
+#[derive(Clone)]
+struct SunPosition {
+    x: f64,
+    y: f64,
+    day: u32,
 }
 
-struct Body {
-    position: na::Vector2<f64>,
-    velocity: na::Vector2<f64>,
-    acceleration: na::Vector2<f64>,
-    radius: f64,
-    mass: f64,
+struct AnnalemmaSimulation {
+    sun_positions: Vec<SunPosition>,
+    current_day: u32,
+    animation_speed: f64,
 }
 
-impl Body {
-    fn new(&mut self) -> Self {
-        let x = WIDTH / 2.0;
-        let y = HEIGHT / 2.0;
+impl AnnalemmaSimulation {
+    fn new() -> Self {
+        let mut positions = Vec::new();
 
-        let angle = 1.0;
-        let speed = 1.0;
-        let vx = angle.cos() * speed;
-        let vy = angle.sin() * speed;
+        for day in 0..365 {
+            let pos = Self::calculate_sun_position(day as f64);
+            positions.push(SunPosition {
+                x: pos.x,
+                y: pos.y,
+                day: day as u32,
+            });
+        }
 
         Self {
-            position: na::Vector2::new(x, y),
-            velocity: na::Vector2::new(vx, vy),
-            acceleration: na::Vector2::new(0.0, 0.0),
-            radius: (10.0),
-            mass: (10.0),
+            sun_positions: positions,
+            current_day: 0,
+            animation_speed: 1.0,
         }
+    }
+
+    fn calculate_sun_position(day_of_year: f64) -> Vector2<f64> {
+        let day_angle = (day_of_year / 365.25) * 2.0 * PI;
+
+        let equation_of_time = Self::equation_of_time(day_of_year);
+
+        let declination = Self::solar_declination(day_of_year);
+
+        Vector2::new(equation_of_time, declination)
+    }
+
+    fn equation_of_time(day_of_year: f64) -> f64 {
+        let day_angle = (day_of_year / 365.35) * 2.0 * PI;
+
+        //orbital eccentricity effects
+        let eccentricity_term = 7.655 * (2.0 * day_angle).sin();
+        let obliquity_term = 9.873 * (day_angle + 3.588).sin();
+
+        //in minutes, push to degrees for display
+        let equation_minutes = eccentricity_term + obliquity_term;
+        equation_minutes / 4.0
+    }
+
+    fn solar_declination(day_of_year: f64) -> f64 {
+        let day_angle = (day_of_year / 365.25) * 2.0 * PI;
+
+        let axial_tilt = 23.44;
+
+        //sinusdial variation
+        let solstice_offset = day_angle - (172.0 / 365.25) * 2.0 * PI;
+        axial_tilt * solstice_offset.cos()
     }
 }
 
