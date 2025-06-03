@@ -97,6 +97,56 @@ impl AnnalemmaSimulation {
         let solstice_offset = day_angle - (172.0 / 365.25) * 2.0 * PI;
         axial_tilt * solstice_offset.cos()
     }
+
+    fn update(&mut self, dt: f64) {
+        self.current_day =
+            ((self.current_day as f64 + self.animation_speed * dt * 60.0) % 365.0) as u32;
+    }
+
+    fn screen_position(&self, sun_pos: &SunPosition) -> [f64; 2] {
+        //conv astronomical coordinates to screen coordinates
+        let center_x = WIDTH / 2.0;
+        let center_y = HEIGHT / 2.0;
+
+        //scaling
+        let x_scale = 15.0; //eot (horizontal)
+        let y_scale = 8.0; //declination (vertical)
+
+        [
+            center_x + sun_pos.x * x_scale,
+            center_y - sun_pos.y * y_scale, //flip y
+        ]
+    }
+
+    fn render(&self, c: Context, g: &mut G2d) {
+        clear([0.0, 0.0, 0.1, 1.0], g);
+
+        // self.draw_axes(c, g);
+
+        self.draw_analemma_path(c, g);
+
+        // self.draw_current_sun(c, g);
+
+        // self.draw_date_info(c, g);
+    }
+
+    fn draw_analemma_path(&self, c: Context, g: &mut G2d) {
+        for i in 0..self.sun_positions.len() {
+            let current_pos = self.screen_position(&self.sun_positions[i]);
+            let next_pos =
+                self.screen_position(&self.sun_positions[(i + 1) % self.sun_positions.len()]);
+
+            //color path based on season?
+
+            line(
+                [1.0, 1.0, 0.8, 1.0],
+                2.0,
+                [current_pos[0], current_pos[1], next_pos[0], next_pos[1]],
+                c.transform,
+                g,
+            );
+        }
+    }
 }
 
 fn main() {
@@ -104,15 +154,20 @@ fn main() {
         .exit_on_esc(true)
         .build()
         .unwrap();
-    while let Some(e) = window.next() {
-        window.draw_2d(&e, |c, g, _| {
-            clear([0.5, 0.5, 0.5, 1.0], g);
-            rectangle(
-                [1.0, 0.0, 0.0, 1.0],
-                [WIDTH / 2.0, HEIGHT / 2.0, 100.0, 100.0],
-                c.transform,
-                g,
-            );
-        });
+
+    let mut simulation = AnnalemmaSimulation::new();
+
+    while let Some(event) = window.next() {
+        match event {
+            Event::Loop(Loop::Update(UpdateArgs { dt })) => {
+                simulation.update(dt);
+            }
+            Event::Loop(Loop::Render(_)) => {
+                window.draw_2d(&event, |c, g, _| {
+                    simulation.render(c, g);
+                });
+            }
+            _ => {}
+        }
     }
 }
