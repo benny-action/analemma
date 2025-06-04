@@ -1,6 +1,6 @@
 use nalgebra::{self as na, ComplexField, Vector2};
 use piston_window::*;
-use std::f64::consts::PI;
+use std::{f64::consts::PI, usize};
 
 /*
 * NOTE: designspec - graphical look at how an analemma is plotted
@@ -61,7 +61,7 @@ impl AnnalemmaSimulation {
 
         Self {
             sun_positions: positions,
-            current_day: 0,
+            current_day: 136, //TODO: Vary based on actual day? Animate from tday?
             animation_speed: 1.0,
         }
     }
@@ -80,8 +80,8 @@ impl AnnalemmaSimulation {
         let day_angle = (day_of_year / 365.35) * 2.0 * PI;
 
         //orbital eccentricity effects
-        let eccentricity_term = 7.655 * (2.0 * day_angle).sin();
-        let obliquity_term = 9.873 * (day_angle + 3.588).sin();
+        let eccentricity_term = 9.655 * (2.0 * day_angle).sin();
+        let obliquity_term = 7.873 * (day_angle + 3.588).sin();
 
         //in minutes, push to degrees for display
         let equation_minutes = eccentricity_term + obliquity_term;
@@ -125,7 +125,7 @@ impl AnnalemmaSimulation {
 
         self.draw_analemma_path(c, g);
 
-        // self.draw_current_sun(c, g);
+        self.draw_current_sun(c, g);
 
         // self.draw_date_info(c, g);
     }
@@ -142,6 +142,26 @@ impl AnnalemmaSimulation {
                 [1.0, 1.0, 0.8, 1.0],
                 2.0,
                 [current_pos[0], current_pos[1], next_pos[0], next_pos[1]],
+                c.transform,
+                g,
+            );
+        }
+    }
+
+    fn draw_current_sun(&self, c: Context, g: &mut G2d) {
+        if let Some(current_pos) = self.sun_positions.get(self.current_day as usize) {
+            let screen_pos = self.screen_position(current_pos);
+
+            ellipse(
+                [1.0, 1.0, 0.0, 1.0],
+                [screen_pos[0] - 8.0, screen_pos[1] - 8.0, 16.0, 16.0],
+                c.transform,
+                g,
+            );
+
+            ellipse(
+                [1.0, 1.0, 1.0, 1.0],
+                [screen_pos[0] - 4.0, screen_pos[1] - 4.0, 8.0, 8.0],
                 c.transform,
                 g,
             );
