@@ -136,10 +136,10 @@ impl AnnalemmaSimulation {
             let next_pos =
                 self.screen_position(&self.sun_positions[(i + 1) % self.sun_positions.len()]);
 
-            //color path based on season?
+            let season_colour = self.season_colour(self.sun_positions[i].day);
 
             line(
-                [1.0, 1.0, 0.8, 1.0],
+                season_colour,
                 2.0,
                 [current_pos[0], current_pos[1], next_pos[0], next_pos[1]],
                 c.transform,
@@ -165,6 +165,16 @@ impl AnnalemmaSimulation {
                 c.transform,
                 g,
             );
+        }
+    }
+
+    fn season_colour(&self, day: u32) -> [f32; 4] {
+        match day {
+            0..=79 => [0.7, 0.9, 1.0, 1.0],
+            80..=171 => [0.5, 1.0, 0.5, 1.0],
+            172..=265 => [1.0, 0.8, 0.3, 1.0],
+            266..=365 => [1.0, 0.5, 0.2, 1.0],
+            _ => [1.0, 1.0, 1.0, 1.0],
         }
     }
 }
