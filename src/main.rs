@@ -1,6 +1,9 @@
-use nalgebra::{self as na, ComplexField, Vector2};
+use nalgebra::{self as na, Vector2};
 use piston_window::*;
-use std::{f64::consts::PI, usize};
+use std::{
+    f64::{self, consts::PI},
+    usize,
+};
 
 /*
 * NOTE: designspec - graphical look at how an analemma is plotted
@@ -20,12 +23,8 @@ use std::{f64::consts::PI, usize};
 *       - Piston drawing primitives to render path and sol pos
 *
 *
-* TODO: 1. PISTON window
-*       1a. - Coordinate system
-*       2. Equation of time implementation [Horizontal component]
-*       3. Solar Declination calculations [Vertical component]
-*       4. Combine both effects to create figure eight
-*       5. Step through states in order to animate.
+* TODO: 1. change background to day sky
+*       2. animate current sun movement throughout year.
 *
 *
 *
@@ -67,8 +66,6 @@ impl AnnalemmaSimulation {
     }
 
     fn calculate_sun_position(day_of_year: f64) -> Vector2<f64> {
-        let day_angle = (day_of_year / 365.25) * 2.0 * PI;
-
         let equation_of_time = Self::equation_of_time(day_of_year);
 
         let declination = Self::solar_declination(day_of_year);
@@ -118,8 +115,10 @@ impl AnnalemmaSimulation {
         ]
     }
 
-    fn render(&self, c: Context, g: &mut G2d) {
-        clear([0.0, 0.0, 0.1, 1.0], g);
+    fn render(&mut self, c: Context, g: &mut G2d) {
+        clear([0.502, 0.788, 0.909, 0.9], g); //sky blue?
+
+        self.draw_sky_gradient(c, g);
 
         // self.draw_axes(c, g);
 
@@ -128,6 +127,26 @@ impl AnnalemmaSimulation {
         self.draw_current_sun(c, g);
 
         // self.draw_date_info(c, g);
+    }
+
+    fn draw_sky_gradient(&self, c: Context, g: &mut G2d) {
+        let steps = 100;
+        let step_height = HEIGHT / steps as f64;
+
+        for i in 0..steps {
+            let t = i as f32 / (steps - 1) as f32;
+
+            let colour = [
+                0.53 + (0.87 - 0.53) * t,
+                0.81 + (0.95 - 0.81) * t,
+                0.92 + (1.0 - 0.92) * t,
+                1.0,
+            ];
+
+            let y = i as f64 * step_height;
+
+            rectangle(colour, [0.0, y, WIDTH, step_height], c.transform, g);
+        }
     }
 
     fn draw_analemma_path(&self, c: Context, g: &mut G2d) {
@@ -148,20 +167,17 @@ impl AnnalemmaSimulation {
         }
     }
 
-    fn draw_current_sun(&self, c: Context, g: &mut G2d) {
+    fn draw_current_sun(&mut self, c: Context, g: &mut G2d) {
         if let Some(current_pos) = self.sun_positions.get(self.current_day as usize) {
+            for i in 0..=365 {
+                self.current_day += 1;
+            }
+
             let screen_pos = self.screen_position(current_pos);
 
             ellipse(
-                [1.0, 1.0, 0.0, 1.0],
-                [screen_pos[0] - 8.0, screen_pos[1] - 8.0, 16.0, 16.0],
-                c.transform,
-                g,
-            );
-
-            ellipse(
                 [1.0, 1.0, 1.0, 1.0],
-                [screen_pos[0] - 4.0, screen_pos[1] - 4.0, 8.0, 8.0],
+                [screen_pos[0] - 8.0, screen_pos[1] - 8.0, 16.0, 16.0],
                 c.transform,
                 g,
             );
@@ -170,9 +186,9 @@ impl AnnalemmaSimulation {
 
     fn season_colour(&self, day: u32) -> [f32; 4] {
         match day {
-            0..=79 => [0.7, 0.9, 1.0, 1.0],
-            80..=171 => [0.5, 1.0, 0.5, 1.0],
-            172..=265 => [1.0, 0.8, 0.3, 1.0],
+            0..=79 => [0.4, 0.4, 1.0, 1.0],    //b
+            80..=171 => [0.5, 1.0, 0.5, 1.0],  //g
+            172..=265 => [1.0, 0.8, 0.3, 1.0], //r
             266..=365 => [1.0, 0.5, 0.2, 1.0],
             _ => [1.0, 1.0, 1.0, 1.0],
         }
