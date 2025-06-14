@@ -19,7 +19,6 @@ use std::{
 *       - 3D to 2D projection
 *       Rendering strategy:
 *       - Track year of sun positions
-*       - Store in hashmap
 *       - Piston drawing primitives to render path and sol pos
 *
 *
@@ -120,13 +119,18 @@ impl AnnalemmaSimulation {
 
         self.draw_sky_gradient(c, g);
 
-        // self.draw_axes(c, g);
-
         self.draw_analemma_path(c, g);
 
         self.draw_current_sun(c, g);
 
-        // self.draw_date_info(c, g);
+        self.draw_date_info(c, g);
+    }
+
+    fn date_text(&mut self, c: Context, g: &mut G2d) {
+        // let factory = window
+
+        let font_data = include_bytes!("../assets/Iosevka-Bold.ttf");
+        // let mut glyphs = Glyphs::from_bytes(font_data, factory, TextureSettings::new()).unwrap();
     }
 
     fn draw_sky_gradient(&self, c: Context, g: &mut G2d) {
@@ -181,6 +185,28 @@ impl AnnalemmaSimulation {
                 c.transform,
                 g,
             );
+        }
+    }
+
+    fn draw_date_info(&self, c: Context, g: &mut G2d) {
+        let key_days = [
+            (80, "Vernal Equinox"),
+            (172, "Summer Solstice"),
+            (266, "Autumnal Equinox"),
+            (355, "Winter Solstice"),
+        ];
+
+        for (day, _name) in key_days.iter() {
+            if let Some(pos) = self.sun_positions.get(*day) {
+                let screen_pos = self.screen_position(pos);
+
+                ellipse(
+                    [1.0, 0.5, 0.0, 0.8],
+                    [screen_pos[0] - 3.0, screen_pos[1] - 3.0, 6.0, 6.0],
+                    c.transform,
+                    g,
+                );
+            }
         }
     }
 
