@@ -1,6 +1,7 @@
 use nalgebra::{self as na, Vector2};
 use piston_window::*;
 use std::{
+    error::Error,
     f64::{self, consts::PI},
     usize,
 };
@@ -126,13 +127,6 @@ impl AnnalemmaSimulation {
         self.draw_date_info(c, g);
     }
 
-    fn date_text(&mut self, c: Context, g: &mut G2d) {
-        // let factory = window
-
-        let font_data = include_bytes!("../assets/Iosevka-Bold.ttf");
-        // let mut glyphs = Glyphs::from_bytes(font_data, factory, TextureSettings::new()).unwrap();
-    }
-
     fn draw_sky_gradient(&self, c: Context, g: &mut G2d) {
         let steps = 100;
         let step_height = HEIGHT / steps as f64;
@@ -221,6 +215,39 @@ impl AnnalemmaSimulation {
     }
 }
 
+pub struct TextRenderer {
+    glyphs: Glyphs,
+}
+
+impl TextRenderer {
+    pub fn new(window: &mut PistonWindow) -> Result<Self, Box<dyn std::error::Error>> {
+        let factory = window.create_texture_context();
+        let glyphs = Glyphs::new("assets/Iosevka-Bold.ttf", factory, TextureSettings::new())?;
+
+        Ok(TextRenderer { glyphs })
+    }
+
+    pub fn draw_text(
+        &mut self,
+        text: &str,
+        x: f64,
+        y: f64,
+        size: u32,
+        colour: [f32; 4],
+        context: Context,
+        graphics: &mut G2d,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        text::Text::new_color(colour, size).draw(
+            text,
+            &mut self.glyphs,
+            &context.draw_state,
+            context.transform.trans(x, y),
+            graphics,
+        )?;
+        Ok(())
+    }
+}
+
 fn main() {
     let mut window: PistonWindow = WindowSettings::new("ANALEMMA", [WIDTH, HEIGHT])
         .exit_on_esc(true)
@@ -228,6 +255,8 @@ fn main() {
         .unwrap();
 
     let mut simulation = AnnalemmaSimulation::new();
+
+    let text_renderer = TextRenderer::new(&mut window).unwrap();
 
     while let Some(event) = window.next() {
         match event {
