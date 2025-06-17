@@ -256,7 +256,7 @@ fn main() {
 
     let mut simulation = AnnalemmaSimulation::new();
 
-    let text_renderer = TextRenderer::new(&mut window).unwrap();
+    let mut text_renderer = TextRenderer::new(&mut window).unwrap();
 
     while let Some(event) = window.next() {
         match event {
@@ -264,11 +264,29 @@ fn main() {
                 simulation.update(dt);
             }
             Event::Loop(Loop::Render(_)) => {
-                window.draw_2d(&event, |c, g, _| {
+                window.draw_2d(&event, |c, g, device| {
                     simulation.render(c, g);
+
+                    render_text(&mut text_renderer, &c, g);
+
+                    text_renderer.glyphs.factory.encoder.flush(device);
                 });
             }
             _ => {}
         }
     }
+}
+
+fn render_text(text_renderer: &mut TextRenderer, context: &Context, graphics: &mut G2d) {
+    text_renderer
+        .draw_text(
+            "Test Text",
+            50.0,
+            50.0,
+            24,
+            [1.0, 1.0, 1.0, 1.0],
+            *context,
+            graphics,
+        )
+        .unwrap();
 }
