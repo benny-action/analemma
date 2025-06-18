@@ -267,7 +267,7 @@ fn main() {
                 window.draw_2d(&event, |c, g, device| {
                     simulation.render(c, g);
 
-                    render_text(&mut text_renderer, &c, g);
+                    render_text(50.0, 50.0, "test", &mut text_renderer, &c, g);
 
                     text_renderer.glyphs.factory.encoder.flush(device);
                 });
@@ -277,12 +277,19 @@ fn main() {
     }
 }
 
-fn render_text(text_renderer: &mut TextRenderer, context: &Context, graphics: &mut G2d) {
+fn render_text(
+    pos_x: f64,
+    pos_y: f64,
+    text: &str,
+    text_renderer: &mut TextRenderer,
+    context: &Context,
+    graphics: &mut G2d,
+) {
     text_renderer
         .draw_text(
-            "Test Text",
-            50.0,
-            50.0,
+            text,
+            pos_x,
+            pos_y,
             24,
             [1.0, 1.0, 1.0, 1.0],
             *context,
