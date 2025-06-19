@@ -1,7 +1,6 @@
 use nalgebra::{self as na, Vector2};
 use piston_window::*;
 use std::{
-    error::Error,
     f64::{self, consts::PI},
     usize,
 };
@@ -124,7 +123,7 @@ impl AnnalemmaSimulation {
 
         self.draw_current_sun(c, g);
 
-        self.draw_date_info(c, g);
+        // self.draw_date_info(c, g);
     }
 
     fn draw_sky_gradient(&self, c: Context, g: &mut G2d) {
@@ -182,7 +181,7 @@ impl AnnalemmaSimulation {
         }
     }
 
-    fn draw_date_info(&self, c: Context, g: &mut G2d) {
+    fn get_date_info(&self) -> Vec<([f64; 2], &'static str)> {
         let key_days = [
             (80, "Vernal Equinox"),
             (172, "Summer Solstice"),
@@ -190,17 +189,26 @@ impl AnnalemmaSimulation {
             (355, "Winter Solstice"),
         ];
 
-        for (day, _name) in key_days.iter() {
+        let mut positions = Vec::new();
+
+        for (day, name) in key_days.iter() {
             if let Some(pos) = self.sun_positions.get(*day) {
                 let screen_pos = self.screen_position(pos);
-
-                ellipse(
-                    [1.0, 0.5, 0.0, 0.8],
-                    [screen_pos[0] - 3.0, screen_pos[1] - 3.0, 6.0, 6.0],
-                    c.transform,
-                    g,
-                );
+                positions.push((screen_pos, *name));
             }
+        }
+
+        positions
+    }
+
+    fn draw_date_markers(&self, positions: &[([f64; 2], &str)], c: Context, g: &mut G2d) {
+        for (screen_pos, _name) in positions {
+            ellipse(
+                [1.0, 0.5, 0.0, 0.8],
+                [screen_pos[0] - 3.0, screen_pos[1] - 3.0, 6.0, 6.0],
+                c.transform,
+                g,
+            );
         }
     }
 
@@ -258,6 +266,8 @@ fn main() {
 
     let mut text_renderer = TextRenderer::new(&mut window).unwrap();
 
+    let date_positions = simulation.get_date_info();
+
     while let Some(event) = window.next() {
         match event {
             Event::Loop(Loop::Update(UpdateArgs { dt })) => {
@@ -268,6 +278,10 @@ fn main() {
                     simulation.render(c, g);
 
                     render_text(50.0, 50.0, "test", &mut text_renderer, &c, g);
+
+                    if let Some((pos, name)) = date_positions.get(0) {
+                        render_text(pos[0], pos[1], name, &mut text_renderer, &c, g);
+                    }
 
                     text_renderer.glyphs.factory.encoder.flush(device);
                 });
