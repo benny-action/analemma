@@ -270,21 +270,30 @@ fn main() {
 
     while let Some(event) = window.next() {
         match event {
-            Event::Loop(Loop::Update(UpdateArgs { dt })) => {
-                simulation.update(dt);
-            }
             Event::Loop(Loop::Render(_)) => {
                 window.draw_2d(&event, |c, g, device| {
                     simulation.render(c, g);
 
-                    render_text(50.0, 50.0, "test", &mut text_renderer, &c, g);
+                    render_text(50.0, 50.0, "Earth's Analemma", &mut text_renderer, &c, g);
 
-                    if let Some((pos, name)) = date_positions.get(0) {
-                        render_text(pos[0], pos[1], name, &mut text_renderer, &c, g);
+                    for (pos, name) in &date_positions {
+                        let offset = "Vernal Equinox";
+                        if name == &offset {
+                            render_text(pos[0] - 190.0, pos[1], name, &mut text_renderer, &c, g);
+                        } else {
+                            render_text(pos[0], pos[1], name, &mut text_renderer, &c, g);
+                        }
+                        simulation.draw_date_markers(&[(*pos, name)], c, g);
                     }
+                    // if let Some((pos, name)) = date_positions.get(0) {
+                    //     render_text(pos[0], pos[1], name, &mut text_renderer, &c, g);
+                    // }
 
                     text_renderer.glyphs.factory.encoder.flush(device);
                 });
+            }
+            Event::Loop(Loop::Update(UpdateArgs { dt })) => {
+                simulation.update(dt);
             }
             _ => {}
         }
