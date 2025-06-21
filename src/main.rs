@@ -178,6 +178,12 @@ impl AnnalemmaSimulation {
                 c.transform,
                 g,
             );
+            ellipse(
+                [1.0, 1.0, 1.0, 0.5],
+                [screen_pos[0] - 58.0, screen_pos[1] + 28.0, 16.0, 16.0],
+                c.transform,
+                g,
+            );
         }
     }
 
